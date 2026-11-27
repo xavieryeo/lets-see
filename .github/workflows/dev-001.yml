@@ -1,0 +1,67 @@
+name: Desktop foundation
+
+on:
+  pull_request:
+  push:
+    branches: [main, dev-001/bootstrap-tauri]
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .nvmrc
+      - name: Install Linux prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential pkg-config libwebkit2gtk-4.1-dev libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
+      - name: Toolchain versions
+        run: |
+          node -v
+          npm -v
+          rustc -V
+          cargo -V
+      - name: Resolve missing bootstrap lockfiles
+        id: locks
+        shell: bash
+        run: |
+          missing=false
+          if [ ! -f package-lock.json ]; then
+            npm install --package-lock-only --ignore-scripts
+            missing=true
+          fi
+          if [ ! -f src-tauri/Cargo.lock ]; then
+            cargo generate-lockfile --manifest-path src-tauri/Cargo.toml
+            missing=true
+          fi
+          echo "missing=$missing" >> "$GITHUB_OUTPUT"
+      - name: Upload lockfiles for review if not committed
+        if: steps.locks.outputs.missing == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: bootstrap-lockfiles
+          path: |
+            package-lock.json
+            src-tauri/Cargo.lock
+          if-no-files-found: error
+      - run: npm ci
+      - run: npm run check
+      - run: npm run build
+      - run: cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
+      - run: cargo clippy --manifest-path src-tauri/Cargo.toml --locked --all-targets -- -D warnings
+      - run: cargo test --manifest-path src-tauri/Cargo.toml --locked
+      - name: Native executable build
+        run: cargo build --manifest-path src-tauri/Cargo.toml --locked --release
+      - name: Require committed lockfiles before acceptance
+        if: always()
+        run: |
+          git ls-files --error-unmatch package-lock.json src-tauri/Cargo.lock
+          git diff --exit-code -- package-lock.json src-tauri/Cargo.lock
