@@ -30,5 +30,4 @@ Choose the **MIT License**. Place the canonical license text in [LICENSE](../../
 ## Verification
 
 - A root LICENSE file contains the unmodified standard MIT terms, year and owner.
-- README and product specification identify MIT and link to LICENSE.
 - The license and decision are reviewed in the same PR. Close [#169](https://github.com/xavieryeo/lets-see/issues/169) when merged.

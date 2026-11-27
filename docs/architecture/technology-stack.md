@@ -1,7 +1,7 @@
 # Technology stack: decisions and rationale
 
 Status: **baseline architecture choices**, not proof of implementation. Last reviewed: 2026-11-27.
-Related: [Product specification](../product/product-specification.md) · [ADR-001: desktop shell](adr/ADR-001-desktop-shell.md) · [ADR-015: license](adr/ADR-015-project-license.md).
+Related: [ADR-001: desktop shell](adr/ADR-001-desktop-shell.md) · [ADR-015: license](adr/ADR-015-project-license.md).
 
 ## 1. Decision summary
 
