@@ -113,7 +113,7 @@ Tauri's frontend capability restrictions help reduce what a compromised WebView 
 1. Verify streaming Markdown/code, selectable text, accessibility and keyboard/mouse behaviour.
 2. Verify embedded **xterm.js** PTY interaction, **Monaco** editing and diff rendering.
 3. Test docking/resizing, large execution graphs, multiple panels and sustained streaming under load.
-4. Test Windows, macOS and Linux WebView behaviour (including packaged builds and Linux prerequisites).
+4. Test Linux WebView behaviour (including packaged builds and Linux prerequisites). Other desktop platforms require a separate decision.
 5. Validate desktop-to-headless runtime protocol, event ordering, cancellation, process shutdown and restart.
 6. Threat-model and test frontend compromise attempts, command allowlists, input validation, CSP and the broker boundary.
 7. Measure reference hardware cold start, memory, rendering latency, distribution and update maintenance.
@@ -157,7 +157,7 @@ This is a **logical separation**, not yet a commitment to process count, transpo
 
 ## 8.1 Platform support
 
-Linux and Windows are initial desktop build targets. OS-enforced agent execution security remains Linux-first; native Windows agent sandbox/broker enforcement is outside the initial scope. Both clients retain desktop security hardening and must fail closed when a required execution backend is unavailable. A future Windows desktop connection to a verified Linux backend is subject to protocol and remote-execution design. See [ADR-014](adr/ADR-014-platform-support.md); desktop build success is not evidence of execution security.
+Linux x86-64 is the only initial desktop and execution-security target. Build, package and validate on Linux; do not add OS-specific accommodations or CI for other platforms during the initial curriculum. Other operating systems are outside scope unless explicitly reconsidered. Desktop hardening and independently enforced agent execution remain separate concerns. See [ADR-014](adr/ADR-014-platform-support.md).
 
 ## 9. Explicitly deferred choices
 

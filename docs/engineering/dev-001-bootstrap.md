@@ -12,9 +12,9 @@ The welcome button uses React's useState. A click schedules a render with update
 
 ## Platform scope
 
-Desktop development and CI target Linux x86-64 (Ubuntu 24.04) and Windows x64 (MSVC, Windows 11 as the initial local validation target). Both run the same React UI and Rust/Tauri desktop host. See [ADR-014](../architecture/adr/ADR-014-platform-support.md).
+Linux x86-64 (Ubuntu 24.04) is the only initial desktop development, build and verification target. Linux also remains the target for the future trusted execution broker, nono and OS-enforced agent isolation. Windows and macOS support are outside the initial scope; reconsider them only through a later platform decision. See [ADR-014](../architecture/adr/ADR-014-platform-support.md).
 
-Agent sandboxing, OS-level workload restrictions, nono and independent execution-broker enforcement remain Linux-only initial targets. Windows must not fall back to unrestricted agent execution. No agent execution exists in this increment on either OS. Desktop-level CSP, permission minimization, dependency checks and input validation apply equally on both.
+The desktop IPC boundary, CSP, dependency assurance and fail-closed security principles remain required. No agent execution or verified sandbox exists in this increment.
 
 ## Run on Linux (Ubuntu 24.04)
 
@@ -23,28 +23,11 @@ Install the [official Tauri prerequisites](https://v2.tauri.app/start/prerequisi
     sudo apt update
     sudo apt install build-essential curl wget file libwebkit2gtk-4.1-dev libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
 
-Install Rust via rustup from its official site, and Node via your trusted version manager. The repository pins Rust 1.100.0 and Node 22.23.5. Record actual versions with rustc -V, cargo -V, node -v and npm -v.
+Install Rust via rustup from its official site, and Node via your trusted version manager. The repository pins Rust 1.100.0 and Node 24.22.3. Record actual versions with rustc -V, cargo -V, node -v and npm -v.
 
-## Run on Windows (x64)
+## Development and build commands
 
-Use a native Windows PowerShell session, not WSL, for the Windows desktop executable.
-
-1. Install [Visual Studio Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) with the **Desktop development with C++** workload, including the MSVC x64 compiler and Windows SDK.
-2. Ensure the [Microsoft Edge WebView2 Runtime](https://developer.microsoft.com/microsoft-edge/webview2/) is installed (normally present on Windows 11).
-3. Install Rust using [rustup](https://rustup.rs/) and select the x64 MSVC host toolchain. Install the Node version in .nvmrc with a trusted version manager.
-
-From the repository root:
-
-    rustup show
-    rustc -vV
-    node -v
-    npm -v
-
-The host reported by Rust should be x86_64-pc-windows-msvc. If Rust was installed with the GNU host, install the pinned MSVC toolchain and configure rustup to use the MSVC host for this repository. See [Tauri Windows prerequisites](https://v2.tauri.app/start/prerequisites/#windows). The MSVC compiler and WebView2 are desktop dependencies, not agent security backends.
-
-## Shared development and build commands
-
-The following commands work from the repository root on both platforms, using Bash on Linux or PowerShell on Windows.
+Run these commands from the repository root on Linux.
 
 **Lockfile gate:** The initial authoring environment could not reach npm/crates.io or run Rust. Direct versions are exact, but transitive resolution is not reproducible until both lockfiles are generated and reviewed. Generate once on a network-enabled, trusted workstation:
 
@@ -52,7 +35,7 @@ The following commands work from the repository root on both platforms, using Ba
     cargo generate-lockfile --manifest-path src-tauri/Cargo.toml
     npm ci
 
-Review package-lock.json and src-tauri/Cargo.lock; commit both. Subsequent installs must use npm ci and Cargo's --locked mode. Each OS job can generate missing locks as OS-labelled review artifacts, then fails the merge gate until both are checked in. Review the cross-platform optional dependencies in the npm lockfile and verify that both CI jobs accept the same committed lockfiles. The earlier Linux job failed inside npm's resolver (edgesOut); the cause remains unconfirmed. Never treat a generated lock as a vulnerability audit.
+Review package-lock.json and src-tauri/Cargo.lock; commit both. Subsequent installs must use npm ci and Cargo's --locked mode. Linux CI can generate missing locks as review artifacts, then fails the merge gate until both are checked in. Review the resolved dependencies before committing them. Earlier CI failed inside npm's resolver (edgesOut); the cause remains unconfirmed, and changing Node does not prove that it is fixed. Never treat a generated lock as a vulnerability audit.
 
     npm run check
     npm run build
@@ -62,9 +45,9 @@ Review package-lock.json and src-tauri/Cargo.lock; commit both. Subsequent insta
     npm run desktop:dev
     npm run desktop:build
 
-The last command builds the native executable without an installer. Expected outputs: src-tauri/target/release/lets-see on Linux and src-tauri/target/release/lets-see.exe on Windows (unless Cargo target-directory settings are overridden). WebView2 must be available on Windows.
+The last command builds the native executable without an installer. Expected output: src-tauri/target/release/lets-see (unless Cargo target-directory settings are overridden).
 
-The CI matrix compiles release executables with the bundled-asset production protocol and uploads successful build outputs as platform-labelled **unsigned, test-only** artifacts. A produced artifact is not proof of a working GUI or a completed dependency review. DEV-007 covers installer packaging and broader platform verification. Rust tests need the built frontend assets.
+Linux CI compiles the release executable with the bundled-asset production protocol and uploads successful output as an **unsigned, test-only** artifact. A produced artifact is not proof of a working GUI or a completed dependency review. DEV-007 covers Linux installer packaging and desktop verification. Rust tests need the built frontend assets.
 
 ## Important files and flow
 
@@ -80,7 +63,7 @@ The CI matrix compiles release executables with the bundled-asset production pro
 | src-tauri/src/main.rs | Native application entry point; starts event loop |
 | src-tauri/tauri.conf.json | Window, assets, CSP and capability policy |
 | tests/security.test.mjs | Static regression checks for the intentionally small exposed surface |
-| .github/workflows/dev-001.yml | Linux/Windows desktop CI matrix and lockfile review gate |
+| .github/workflows/dev-001.yml | Linux desktop CI and lockfile review gate |
 
     Human input
         |
@@ -104,8 +87,8 @@ The browser-facing UI is not an authority. This bootstrap grants no IPC permissi
 
 ## Evidence and review checklist
 
-- [ ] Verify both Linux and Windows CI jobs and review the same committed lockfiles.
-- [ ] On each available Linux and Windows target workstation: launch, resize, minimize/restore, click Run UI check, reset, use keyboard Tab and Enter, close. Confirm the process exits. Record any untested platform explicitly.
+- [ ] Verify Linux CI and review the committed lockfiles.
+- [ ] On the target Linux workstation: launch, resize, minimize/restore, click Run UI check, reset, use keyboard Tab and Enter, close. Confirm the process exits.
 - [ ] Capture a screenshot and record OS, hardware, WebView, Node, npm and Rust versions.
 - [ ] In a disposable development session with DevTools, attempt only a fictitious unregistered command via the internal invoke API (if exposed): window.__TAURI_INTERNALS__.invoke("__dev001_not_registered__"). It must reject or be unavailable. No actual privileged operation is needed. This is a runtime check, distinct from the static tests.
 - [ ] Run the built executable; verify local interaction without the dev server.
@@ -121,4 +104,4 @@ The browser-facing UI is not an authority. This bootstrap grants no IPC permissi
 
 ## Known limitations
 
-No native window was launched in the authoring environment. Windows build support is configured, not yet verified; no native Windows agent isolation or broker implementation is in scope. No screenshots or performance measurements are claimed. Lockfiles are a blocking follow-up to complete this same PR, not a separate curriculum ticket. No custom chrome, editor, terminal, settings, agent runtime, providers, credentials, or installer packaging. Existing architecture and licensing documents are unchanged.
+No native window was launched in the authoring environment. No screenshots or performance measurements are claimed. Lockfiles are a blocking follow-up to complete this same PR, not a separate curriculum ticket. No custom chrome, editor, terminal, settings, agent runtime, providers, credentials, or installer packaging. Licensing is unchanged; the platform ADR records the Linux-only scope.

@@ -1,5 +1,3 @@
-# Consistent source line endings across Linux and Windows for formatting checks.
+# Consistent LF source line endings for reproducible formatting checks.
 * text=auto eol=lf
 *.png binary
-*.ico binary
-*.icns binary
