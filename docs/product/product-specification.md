@@ -40,11 +40,11 @@ UC-01 interact with an LLM; UC-02 execute a coding task; UC-03 develop specialis
 | Evaluation Studio | Versioned tasks, graders, isolated environments, repeatable trials, costs, baselines and CI |
 
 ## Architecture
-React/TypeScript desktop client (Tauri provisional; Electron fallback) communicates through a versioned client protocol with a headless Rust agent runtime. Runtime handles model providers, context, sessions, orchestration, tool definitions and events. Independent execution broker authorises capability-bearing operations and enforces scoped access through interchangeable isolation backends. nono is the preferred initial integration; Linux is the primary security engineering platform. Desktop portability and enforcement portability are separate concerns.
+Windowed React/TypeScript desktop client (Tauri preferred but provisional; Electron fallback, [ADR-001](../architecture/adr/ADR-001-desktop-shell.md)) communicates through a versioned client protocol with a headless Rust agent runtime. Runtime handles model providers, context, sessions, orchestration, tool definitions and events. Independent execution broker authorises capability-bearing operations and enforces scoped access through interchangeable isolation backends. nono is the preferred initial integration; Linux is the primary security engineering platform. Desktop portability and enforcement portability are separate concerns.
 
 Reuse established editor, terminal, graph, chart, database, cryptographic and isolation infrastructure. Build the agent harness, event model, context strategy, capability delegation, execution mediation, inspection and evaluation workflows.
 
-Candidate dependencies (not mandates): Tauri, React, Vite, Tailwind, Radix/shadcn, Motion, Zustand, Dockview, xterm.js, Monaco, React Flow/Cytoscape, ECharts, Tokio, SQLite and OpenTelemetry.
+Selected: graphical desktop, TypeScript, React and Rust. Tauri is the preferred **provisional** desktop shell; Ink is a **deferred optional terminal React renderer**, not a desktop requirement. See [Technology stack and rationale](../architecture/technology-stack.md). Other candidate dependencies (not mandates): Vite, Tailwind, Radix/shadcn, Motion, Zustand, Dockview, xterm.js, Monaco, React Flow/Cytoscape, ECharts, Tokio, SQLite and OpenTelemetry.
 
 ## Requirements register
 | Category | Issues |
@@ -91,6 +91,6 @@ M00 foundations and ADRs; M01 desktop/runtime skeleton; M02 inference and conver
 Measure task completion, reliability, cost/tokens per successful task, rendering latency, event completeness, diagnostic time, enforcement tests, reproducibility and provider integration effort. Security is a gate, not a weighted score. Each implementation task is a dependency-ordered benchmark-inspired PR with prerequisites, learning objectives, problem statement, constraints, non-goals, observable acceptance criteria, tests, security cases, alternatives, trade-offs and reviewer walkthrough. No arbitrary lesson count.
 
 ## Risks and unresolved decisions
-Scope creep, false security confidence, overprivileged execution, provider differences, UI complexity, WebView consistency, Rust learning curve, dependency growth, sensitive logs, nondeterministic evaluations, backend coupling, cross-platform differences, protocol drift and untrusted benchmark workloads. Resolve through staged releases, explicit contracts, threat modelling, prototypes, independent tests and ADRs. Licensing remains undecided.
+Scope creep, false security confidence, overprivileged execution, provider differences, UI complexity, WebView consistency, Rust learning curve, dependency growth, sensitive logs, nondeterministic evaluations, backend coupling, cross-platform differences, protocol drift and untrusted benchmark workloads. Resolve through staged releases, explicit contracts, threat modelling, prototypes, independent tests and ADRs. **Licensing: MIT**, documented in [ADR-015](../architecture/adr/ADR-015-project-license.md) and [LICENSE](../../LICENSE). The Tauri/Electron decision remains provisional.
 
 This is a condensed repository baseline of the conversational PRD; detailed FR/NFR/SI/ADR/AC/SAC requirements are tracked in the linked issue ranges. Product principles and use cases remain document-level identifiers.

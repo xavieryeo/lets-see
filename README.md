@@ -4,7 +4,7 @@ Desktop-first, security-oriented AI agent engineering workbench for developing, 
 
 ## Architecture
 
-- Clean-room Rust headless agent runtime; TypeScript/React desktop client; Tauri provisional pending ADR-001 (#1).
+- Clean-room Rust headless agent runtime; TypeScript/React **windowed desktop** client; Tauri preferred but provisional pending [ADR-001](docs/architecture/adr/ADR-001-desktop-shell.md) ([#1](https://github.com/xavieryeo/lets-see/issues/1)).
 - Independent trusted execution broker, capability-based authority, interchangeable sandbox backends (nono preferred initially).
 - Local-first persistence, structured execution events, progressive disclosure.
 - Linux-first security enforcement; cross-platform desktop target.
@@ -21,4 +21,10 @@ See [GitHub Issues](https://github.com/xavieryeo/lets-see/issues). Stable IDs ap
 
 Implementation tasks should be bounded, dependency-ordered, benchmark-inspired PRs with acceptance criteria, positive and negative tests, trade-offs and reviewer walkthroughs. Requirement issues are not necessarily implementation-sized tasks.
 
-No licence or final desktop framework decision has been made.
+## Technology decisions
+
+See [Technology stack and rationale](docs/architecture/technology-stack.md) for **why a windowed app, TypeScript, React, Rust and Tauri**, and why **Ink is only a deferred optional terminal client**. Tauri must pass its prototype gate before final acceptance.
+
+## License
+
+Licensed under the [MIT License](LICENSE). See [ADR-015](docs/architecture/adr/ADR-015-project-license.md) ([#169](https://github.com/xavieryeo/lets-see/issues/169)) for the choice and trade-offs.
