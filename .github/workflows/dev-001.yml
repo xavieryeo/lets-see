@@ -3,15 +3,29 @@ name: Desktop foundation
 on:
   pull_request:
   push:
-    branches: [main, dev-001/bootstrap-tauri]
+    branches: [main]
 
 permissions:
   contents: read
 
 jobs:
-  linux:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 35
+  desktop:
+    name: Desktop / ${{ matrix.platform }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux-x64
+            runner: ubuntu-24.04
+            executable: src-tauri/target/release/lets-see
+          - platform: windows-x64
+            runner: windows-2025
+            executable: src-tauri/target/release/lets-see.exe
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -19,35 +33,41 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version-file: .nvmrc
-      - name: Install Linux prerequisites
+      - name: Install Linux desktop prerequisites
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential pkg-config libwebkit2gtk-4.1-dev libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
-      - name: Toolchain versions
+      - name: Toolchain versions and native host target
+        id: toolchain
         run: |
           node -v
           npm -v
-          rustc -V
+          rustc -vV
           cargo -V
-      - name: Resolve missing bootstrap lockfiles
-        id: locks
-        shell: bash
-        run: |
-          missing=false
-          if [ ! -f package-lock.json ]; then
-            npm install --package-lock-only --ignore-scripts
-            missing=true
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            rustc -vV | grep -Fx "host: x86_64-pc-windows-msvc"
           fi
+      - name: Resolve missing npm lockfile
+        id: npm_lock
+        run: |
+          if [ ! -f package-lock.json ]; then
+            npm install --package-lock-only --ignore-scripts --loglevel=verbose
+            echo "generated=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Resolve missing Cargo lockfile
+        id: cargo_lock
+        if: ${{ !cancelled() && steps.toolchain.outcome == 'success' }}
+        run: |
           if [ ! -f src-tauri/Cargo.lock ]; then
             cargo generate-lockfile --manifest-path src-tauri/Cargo.toml
-            missing=true
+            echo "generated=true" >> "$GITHUB_OUTPUT"
           fi
-          echo "missing=$missing" >> "$GITHUB_OUTPUT"
-      - name: Upload lockfiles for review if not committed
-        if: steps.locks.outputs.missing == 'true'
+      - name: Upload generated lockfiles for review
+        if: ${{ !cancelled() && (steps.npm_lock.outputs.generated == 'true' || steps.cargo_lock.outputs.generated == 'true') }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: bootstrap-lockfiles
+          name: bootstrap-lockfiles-${{ matrix.platform }}
           path: |
             package-lock.json
             src-tauri/Cargo.lock
@@ -58,8 +78,14 @@ jobs:
       - run: cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
       - run: cargo clippy --manifest-path src-tauri/Cargo.toml --locked --all-targets -- -D warnings
       - run: cargo test --manifest-path src-tauri/Cargo.toml --locked
-      - name: Native executable build
+      - name: Native desktop executable build
         run: cargo build --manifest-path src-tauri/Cargo.toml --locked --release --features tauri/custom-protocol
+      - name: Upload unsigned desktop test executable
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: lets-see-desktop-test-${{ matrix.platform }}
+          path: ${{ matrix.executable }}
+          if-no-files-found: error
       - name: Require committed lockfiles before acceptance
         if: always()
         run: |

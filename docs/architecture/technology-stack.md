@@ -155,6 +155,10 @@ Optional clients via the same runtime API:
 
 This is a **logical separation**, not yet a commitment to process count, transport, authentication mechanism or packaging topology. ADR-002 through ADR-006 address those details. Capability decisions must be verified at the actual enforcement boundary, not inferred from a UI indicator.
 
+## 8.1 Platform support
+
+Linux and Windows are initial desktop build targets. OS-enforced agent execution security remains Linux-first; native Windows agent sandbox/broker enforcement is outside the initial scope. Both clients retain desktop security hardening and must fail closed when a required execution backend is unavailable. A future Windows desktop connection to a verified Linux backend is subject to protocol and remote-execution design. See [ADR-014](adr/ADR-014-platform-support.md); desktop build success is not evidence of execution security.
+
 ## 9. Explicitly deferred choices
 
 | Technology | Position |
