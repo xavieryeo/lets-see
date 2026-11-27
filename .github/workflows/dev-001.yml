@@ -59,7 +59,7 @@ jobs:
       - run: cargo clippy --manifest-path src-tauri/Cargo.toml --locked --all-targets -- -D warnings
       - run: cargo test --manifest-path src-tauri/Cargo.toml --locked
       - name: Native executable build
-        run: cargo build --manifest-path src-tauri/Cargo.toml --locked --release
+        run: cargo build --manifest-path src-tauri/Cargo.toml --locked --release --features tauri/custom-protocol
       - name: Require committed lockfiles before acceptance
         if: always()
         run: |
