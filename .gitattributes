@@ -1,0 +1,3 @@
+# Consistent LF source line endings for reproducible formatting checks.
+* text=auto eol=lf
+*.png binary

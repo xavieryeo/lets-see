@@ -20,12 +20,16 @@ The product is a graphical-first, headless-capable AI agent engineering workbenc
 
 **Prototype Tauri first, keep Electron as a live fallback.** The selection is **not yet accepted** and should not be represented as an observed performance or security result. Windowed UI, TypeScript, React and headless Rust runtime are selected independently of this shell decision.
 
+## Initial platform scope
+
+Linux is the sole initial desktop build and security-engineering target under [ADR-014](ADR-014-platform-support.md). Other platforms are deferred; no framework decision or security guarantee is implied by CI compilation.
+
 ## Decision drivers
 
 1. Rendering fidelity for the actual workbench interactions.
 2. Safety and auditable minimality of frontend-to-native APIs.
 3. Operational separation from headless runtime and trusted broker.
-4. Packaging, updates and prerequisites on Linux/Windows/macOS.
+4. Packaging, updates and prerequisites on Linux; portability is a future decision.
 5. Startup, memory and sustained-streaming responsiveness measured on reference hardware.
 6. Maintenance and contributor cost.
 
