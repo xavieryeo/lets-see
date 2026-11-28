@@ -3,7 +3,10 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
 const config = JSON.parse(
-  readFileSync(new URL("../src-tauri/tauri.conf.json", import.meta.url), "utf8"),
+  readFileSync(
+    new URL("../src-tauri/tauri.conf.json", import.meta.url),
+    "utf8",
+  ),
 );
 const host = readFileSync(
   new URL("../src-tauri/src/main.rs", import.meta.url),
@@ -13,11 +16,13 @@ const host = readFileSync(
 test("bootstrap explicitly grants no native permissions or remote capability", () => {
   assert.equal(config.app.withGlobalTauri, false);
   assert.deepEqual(
-    config.app.security.capabilities.map(({ windows, permissions, remote }) => ({
-      windows,
-      permissions,
-      remote,
-    })),
+    config.app.security.capabilities.map(
+      ({ windows, permissions, remote }) => ({
+        windows,
+        permissions,
+        remote,
+      }),
+    ),
     [{ windows: ["main"], permissions: [], remote: undefined }],
   );
   assert.equal(config.app.security.assetProtocol.enable, false);

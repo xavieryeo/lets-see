@@ -23,27 +23,24 @@ Install the [official Tauri prerequisites](https://v2.tauri.app/start/prerequisi
     sudo apt update
     sudo apt install build-essential curl wget file libwebkit2gtk-4.1-dev libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
 
-Install Rust via rustup from its official site, and Node via your trusted version manager. The repository pins Rust 1.100.0 and Node 24.22.3. Record actual versions with rustc -V, cargo -V, node -v and npm -v.
+Install Rust via rustup from its official site, and Node via your trusted version manager. The repository pins Rust 1.100.0 and Node 24.22.3. Corepack reads the pnpm version from `package.json`.
 
 ## Development and build commands
 
 Run these commands from the repository root on Linux.
 
-**Lockfile gate:** The initial authoring environment could not reach npm/crates.io or run Rust. Direct versions are exact, but transitive resolution is not reproducible until both lockfiles are generated and reviewed. Generate once on a network-enabled, trusted workstation:
+    corepack enable pnpm
+    pnpm install --frozen-lockfile
 
-    npm install --package-lock-only --ignore-scripts
-    cargo generate-lockfile --manifest-path src-tauri/Cargo.toml
-    npm ci
+Review changes to `pnpm-lock.yaml` when updating JavaScript dependencies. If `src-tauri/Cargo.lock` is missing during bootstrap, generate it once with `cargo generate-lockfile --manifest-path src-tauri/Cargo.toml` and commit the reviewed lockfile. Linux CI requires both lockfiles to be tracked.
 
-Review package-lock.json and src-tauri/Cargo.lock; commit both. Subsequent installs must use npm ci and Cargo's --locked mode. Linux CI can generate missing locks as review artifacts, then fails the merge gate until both are checked in. Review the resolved dependencies before committing them. Earlier CI failed inside npm's resolver (edgesOut); the cause remains unconfirmed, and changing Node does not prove that it is fixed. Never treat a generated lock as a vulnerability audit.
-
-    npm run check
-    npm run build
+    pnpm run check
+    pnpm run build
     cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
     cargo clippy --manifest-path src-tauri/Cargo.toml --locked --all-targets -- -D warnings
     cargo test --manifest-path src-tauri/Cargo.toml --locked
-    npm run desktop:dev
-    npm run desktop:build
+    pnpm run desktop:dev
+    pnpm run desktop:build
 
 The last command builds the native executable without an installer. Expected output: src-tauri/target/release/lets-see (unless Cargo target-directory settings are overridden).
 
@@ -53,7 +50,8 @@ Linux CI compiles the release executable with the bundled-asset production proto
 
 | File | Responsibility |
 | --- | --- |
-| package.json / .nvmrc | JS dependencies, scripts and Node version |
+| package.json / .nvmrc | JS dependencies, scripts, and pinned Node and pnpm versions |
+| pnpm-lock.yaml / pnpm-workspace.yaml | Locked JS dependencies and install-script policy. On Linux x64, esbuild uses its platform package with its postinstall script disabled. |
 | vite.config.ts | Loopback development server, production build and test environment |
 | src/main.tsx | React entry point; mounts App into index.html |
 | src/App.tsx | Welcome view and local UI state |
@@ -89,7 +87,7 @@ The browser-facing UI is not an authority. This bootstrap grants no IPC permissi
 
 - [ ] Verify Linux CI and review the committed lockfiles.
 - [ ] On the target Linux workstation: launch, resize, minimize/restore, click Run UI check, reset, use keyboard Tab and Enter, close. Confirm the process exits.
-- [ ] Capture a screenshot and record OS, hardware, WebView, Node, npm and Rust versions.
+- [ ] Capture a screenshot and record OS, hardware, WebView, Node, pnpm and Rust versions.
 - [ ] In a disposable development session with DevTools, attempt only a fictitious unregistered command via the internal invoke API (if exposed): window.__TAURI_INTERNALS__.invoke("__dev001_not_registered__"). It must reject or be unavailable. No actual privileged operation is needed. This is a runtime check, distinct from the static tests.
 - [ ] Run the built executable; verify local interaction without the dev server.
 - [ ] Record cold-start timing method and samples if measured; no startup target is certified by this PR.
@@ -104,4 +102,4 @@ The browser-facing UI is not an authority. This bootstrap grants no IPC permissi
 
 ## Known limitations
 
-No native window was launched in the authoring environment. No screenshots or performance measurements are claimed. Lockfiles are a blocking follow-up to complete this same PR, not a separate curriculum ticket. No custom chrome, editor, terminal, settings, agent runtime, providers, credentials, or installer packaging. Licensing is unchanged; the platform ADR records the Linux-only scope.
+No native window was launched in the authoring environment. No screenshots or performance measurements are claimed. The Cargo lockfile is still required for DEV-001 acceptance. No custom chrome, editor, terminal, settings, agent runtime, providers, credentials, or installer packaging. Licensing is unchanged; the platform ADR records the Linux-only scope.

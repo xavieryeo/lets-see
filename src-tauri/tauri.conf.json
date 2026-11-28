@@ -4,9 +4,9 @@
   "version": "0.1.0",
   "identifier": "dev.lets-see.desktop",
   "build": {
-    "beforeDevCommand": "npm run dev",
+    "beforeDevCommand": "pnpm run dev",
     "devUrl": "http://127.0.0.1:1420",
-    "beforeBuildCommand": "npm run build",
+    "beforeBuildCommand": "pnpm run build",
     "frontendDist": "../dist"
   },
   "app": {
@@ -30,9 +30,7 @@
         {
           "identifier": "bootstrap-no-ipc",
           "description": "No frontend native permissions in DEV-001",
-          "windows": [
-            "main"
-          ],
+          "windows": ["main"],
           "permissions": []
         }
       ],
@@ -44,8 +42,6 @@
   },
   "bundle": {
     "active": false,
-    "icon": [
-      "icons/icon.png"
-    ]
+    "icon": ["icons/icon.png"]
   }
 }
